@@ -20,8 +20,10 @@ class HashTable:
     Implement this.
     """
 
-    def __init__(self, capacity):
-        # Your code here
+    def __init__(self, capacity=MIN_CAPACITY):
+        self.capacity = capacity
+        self.data = [None] * capacity
+        self.count = 0
 
 
     def get_num_slots(self):
@@ -55,6 +57,15 @@ class HashTable:
 
         # Your code here
 
+        fnv_prime = 1099511628211
+        offset_basis =  14695981039346656037
+        hash_value = offset_basis
+        key_utf8 = key.encode()
+        for byte in key_utf8:
+            hash_value = hash_value ^ byte
+            hash_value = hash_value * fnv_prime
+        return hash_value
+
 
     def djb2(self, key):
         """
@@ -64,14 +75,19 @@ class HashTable:
         """
         # Your code here
 
+        hash_value = 5381
+        for char in key:
+            hash_value = (hash_value * 33) + ord(char)
+        return hash_value
+
 
     def hash_index(self, key):
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
-        return self.djb2(key) % self.capacity
+        return self.fnv1(key) % self.capacity
+        # return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -83,6 +99,31 @@ class HashTable:
         """
         # Your code here
 
+        # set the index to be the index.
+        index = self.hash_index(key)
+        # make new_entry the key and value
+        new_entry = HashTableEntry(key, value)
+        # set current to be the self.data(index) aka the current index
+        current = self.data[index]
+        # check if the index is None
+        if self.data[index] is None:
+            # if it's none we make a new entry
+            self.data[index] = HashTableEntry(key, value)
+        else:
+            # while there is a current
+            while current:
+                # check if current.key is the key
+                if current.key is key:
+                    # if it is set the current.value to be value and return
+                    current.value = value
+                    return
+                # previous will become current
+                previous = current
+                # current become the next
+                current = current.next
+            previous.next = new_entry
+
+
 
     def delete(self, key):
         """
@@ -93,6 +134,31 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        
+        # set the index to be the index(key)
+        index = self.hash_index(key)
+        # node is the index
+        node = self.data[index]
+        # previous is None
+        prev = None
+        # check if the node.key equals key
+        if node.key == key:
+            # if it does set the index equal to be the next node and return
+            self.data[index] = node.next
+            return
+        # while node is NOT equal to None
+        while node != None:
+            # check if node.key IS the key
+            if node.key == key:
+                # set previous.next = node.next
+                prev.next = node.next
+                # set self.data(index).next = None
+                self.data[index].next = None
+                # return
+                return
+            prev = node
+            node = node.next
+        return
 
 
     def get(self, key):
@@ -104,6 +170,31 @@ class HashTable:
         Implement this.
         """
         # Your code here
+
+        # setting the index
+        index = self.hash_index(key)
+
+        # check if the self(index) is None
+        if self.data[index] is None:
+            # if so return None
+            return None
+        # if self(index) key IS key
+        if self.data[index].key is key:
+            # return that key's value
+            return self.data[index].value
+        else:
+            # set current to self.data(index) key
+            current = self.data[index]
+            # while there IS a next key
+            while current.next is not None:
+                # first set the current key to be the next key
+                current = current.next
+                # check if current key is the key
+                if current.key is key:
+                    # if so, return that value
+                    return current.value
+            return None
+
 
 
     def resize(self, new_capacity):
